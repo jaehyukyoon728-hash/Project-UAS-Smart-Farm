@@ -29,6 +29,10 @@ return new class extends Migration
 
             $table->text('rekomendasi');
 
+            $table->json('rf')->nullable();
+
+            $table->json('kmeans')->nullable();
+
             $table->timestamps();
         });
         // Schema::create('predictions', function (Blueprint $table) {

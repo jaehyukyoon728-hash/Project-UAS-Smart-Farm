@@ -16,8 +16,17 @@ class Prediction extends Model
 
         'status_kondisi',
 
-        'rekomendasi'
+        'rekomendasi',
 
+        'rf',
+
+        'kmeans'
+
+    ];
+
+    protected $casts = [
+        'rf' => 'array',
+        'kmeans' => 'array',
     ];
     public function sensor()
     {

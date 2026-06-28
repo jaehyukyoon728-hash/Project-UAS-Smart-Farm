@@ -121,6 +121,8 @@ class PredictionProxyController extends Controller
             'tanggal_pencatatan' => now()->toDateString(),
             'status_kondisi'     => $rfLabel,
             'rekomendasi'        => $rekomendasi,
+            'rf'                 => $result['rf'] ?? null,
+            'kmeans'             => $result['kmeans'] ?? null,
         ]);
 
         // ── Kembalikan hasil ke React ─────────────────────────────────

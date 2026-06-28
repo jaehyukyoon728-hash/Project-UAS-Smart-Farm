@@ -11,9 +11,17 @@ class PredictionController extends Controller
     /**
      * Display a listing of predictions.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $predictions = Prediction::with(['sensor', 'admin'])->get();
+        $query = Prediction::with(['sensor.crop', 'admin']);
+
+        if ($request->has('land_id')) {
+            $query->whereHas('sensor', function ($q) use ($request) {
+                $q->where('land_id', $request->land_id);
+            });
+        }
+
+        $predictions = $query->get();
 
         return response()->json([
             'success' => true,
@@ -49,7 +57,7 @@ class PredictionController extends Controller
      */
     public function show(string $id)
     {
-        $prediction = Prediction::with(['sensor', 'admin'])->find($id);
+        $prediction = Prediction::with(['sensor.crop', 'admin'])->find($id);
 
         if (!$prediction) {
             return response()->json([

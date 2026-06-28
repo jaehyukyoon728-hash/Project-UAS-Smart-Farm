@@ -13,7 +13,7 @@ class SensorController extends Controller
      */
     public function index()
     {
-        $sensors = Sensor::with(['crop', 'prediction'])->get();
+        $sensors = Sensor::with(['crop', 'prediction', 'land.user'])->get();
 
         return response()->json([
             'success' => true,
@@ -50,7 +50,7 @@ class SensorController extends Controller
      */
     public function show(string $id)
     {
-        $sensor = Sensor::with(['crop', 'prediction'])->find($id);
+        $sensor = Sensor::with(['crop', 'prediction', 'land.user'])->find($id);
 
         if (!$sensor) {
             return response()->json([

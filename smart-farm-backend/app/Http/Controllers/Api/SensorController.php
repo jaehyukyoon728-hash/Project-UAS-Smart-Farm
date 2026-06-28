@@ -13,7 +13,7 @@ class SensorController extends Controller
      */
     public function index()
     {
-        $sensors = Sensor::with(['crop', 'prediction', 'land.user'])->get();
+        $sensors = Sensor::with(['crop.land.user', 'prediction'])->get();
 
         return response()->json([
             'success' => true,
@@ -28,7 +28,6 @@ class SensorController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'land_id'           => 'required|exists:lands,id',
             'crop_id'           => 'required|exists:crops,id',
             'tahap_pertumbuhan' => 'required|string|max:255',
             'moi'               => 'required|numeric|min:0|max:100',
@@ -50,7 +49,7 @@ class SensorController extends Controller
      */
     public function show(string $id)
     {
-        $sensor = Sensor::with(['crop', 'prediction', 'land.user'])->find($id);
+        $sensor = Sensor::with(['crop.land.user', 'prediction'])->find($id);
 
         if (!$sensor) {
             return response()->json([
@@ -81,7 +80,6 @@ class SensorController extends Controller
         }
 
         $validated = $request->validate([
-            'land_id'           => 'sometimes|exists:lands,id',
             'crop_id'           => 'sometimes|exists:crops,id',
             'tahap_pertumbuhan' => 'sometimes|string|max:255',
             'moi'               => 'sometimes|numeric|min:0|max:100',

@@ -14,7 +14,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with(['admin', 'lands'])->get();
+        $users = User::with(['admin', 'lands.crops.sensors.prediction'])->get();
 
         return response()->json([
             'success' => true,
@@ -56,7 +56,7 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        $user = User::with(['admin', 'lands'])->find($id);
+        $user = User::with(['admin', 'lands.crops.sensors.prediction'])->find($id);
 
         if (!$user) {
             return response()->json([

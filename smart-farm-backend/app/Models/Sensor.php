@@ -8,8 +8,6 @@ class Sensor extends Model
 {
     protected $fillable = [
 
-        'land_id',
-
         'crop_id',
 
         'tahap_pertumbuhan',

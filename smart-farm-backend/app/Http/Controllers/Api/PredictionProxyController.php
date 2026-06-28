@@ -103,7 +103,6 @@ class PredictionProxyController extends Controller
 
         // ── Simpan data Sensor ────────────────────────────────────────
         $sensor = Sensor::create([
-            'land_id'           => $validated['land_id'],
             'crop_id'           => $validated['crop_id'],
             'tahap_pertumbuhan' => $validated['seedling_stage'],
             'moi'               => $validated['moi'],

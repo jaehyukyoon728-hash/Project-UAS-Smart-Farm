@@ -13,7 +13,7 @@ class LandController extends Controller
      */
     public function index()
     {
-        $lands = Land::with(['user', 'admin', 'crops'])->get();
+        $lands = Land::with(['user', 'admin', 'crops.sensors'])->get();
 
         return response()->json([
             'success' => true,
@@ -49,7 +49,7 @@ class LandController extends Controller
      */
     public function show(string $id)
     {
-        $land = Land::with(['user', 'admin', 'crops'])->find($id);
+        $land = Land::with(['user', 'admin', 'crops.sensors'])->find($id);
 
         if (!$land) {
             return response()->json([

@@ -14,8 +14,14 @@ class Admin extends Model
 
         'email',
 
-        'no_phone'
+        'no_phone',
 
+        'password'
+
+    ];
+
+    protected $hidden = [
+        'password',
     ];
 
     public function users()

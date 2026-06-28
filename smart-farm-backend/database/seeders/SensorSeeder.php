@@ -15,7 +15,6 @@ class SensorSeeder extends Seeder
     {
         DB::table('sensors')->insert([
             [
-                'land_id'=>1,
                 'crop_id'=>1,
                 'tahap_pertumbuhan'=>'Pemanenan',
                 'moi'=>45,
@@ -26,7 +25,6 @@ class SensorSeeder extends Seeder
             ],
 
             [
-                'land_id'=>2,
                 'crop_id'=>2,
                 'tahap_pertumbuhan'=>'Pembentukan',
                 'moi'=>52,

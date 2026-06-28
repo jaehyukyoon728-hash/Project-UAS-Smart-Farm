@@ -24,13 +24,7 @@ class AuthController extends Controller
         // ── Cek Admin ─────────────────────────────────────────────
         $admin = Admin::where('email', $request->email)->first();
 
-        if ($admin) {
-            // Admin tidak memiliki password di tabel (belum ada kolom password).
-            // Untuk sekarang gunakan password statis atau skip check.
-            // Jika kolom password sudah ada, ganti dengan Hash::check().
-            // Sementara ini: email match = login admin berhasil.
-            // TODO: tambahkan kolom password ke tabel admins untuk produksi.
-
+        if ($admin && Hash::check($request->password, $admin->password)) {
             $token = $admin->createToken('admin-token')->plainTextToken;
 
             return response()->json([

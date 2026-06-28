@@ -16,7 +16,7 @@ class PredictionController extends Controller
         $query = Prediction::with(['sensor.crop', 'admin']);
 
         if ($request->has('land_id')) {
-            $query->whereHas('sensor', function ($q) use ($request) {
+            $query->whereHas('sensor.crop', function ($q) use ($request) {
                 $q->where('land_id', $request->land_id);
             });
         }

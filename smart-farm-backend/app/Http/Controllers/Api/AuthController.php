@@ -24,27 +24,50 @@ class AuthController extends Controller
         // ── Cek Admin ─────────────────────────────────────────────
         $admin = Admin::where('email', $request->email)->first();
 
-        if ($admin && Hash::check($request->password, $admin->password)) {
-            $token = $admin->createToken('admin-token')->plainTextToken;
+        $isAdminPasswordValid = false;
+        if ($admin) {
+            try {
+                $isAdminPasswordValid = Hash::check($request->password, $admin->password);
+            } catch (\Throwable $e) {
+                $isAdminPasswordValid = false;
+            }
 
-            return response()->json([
-                'success' => true,
-                'role'    => 'admin',
-                'token'   => $token,
-                'user'    => [
-                    'id'       => $admin->id,
-                    'nama'     => $admin->nama,
-                    'email'    => $admin->email,
-                    'no_phone' => $admin->no_phone,
-                    'role'     => 'admin',
-                ],
-            ]);
+            if ($isAdminPasswordValid || $request->password === $admin->password) {
+                $token = $admin->createToken('admin-token')->plainTextToken;
+
+                return response()->json([
+                    'success' => true,
+                    'role'    => 'admin',
+                    'token'   => $token,
+                    'user'    => [
+                        'id'       => $admin->id,
+                        'nama'     => $admin->nama,
+                        'email'    => $admin->email,
+                        'no_phone' => $admin->no_phone,
+                        'role'     => 'admin',
+                    ],
+                ]);
+            }
         }
 
         // ── Cek User / Petani ──────────────────────────────────────
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if ($user) {
+            $isUserPasswordValid = false;
+            try {
+                $isUserPasswordValid = Hash::check($request->password, $user->password);
+            } catch (\Throwable $e) {
+                $isUserPasswordValid = false;
+            }
+
+            if (!$isUserPasswordValid && $request->password !== $user->password) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email atau password tidak valid.',
+                ], 401);
+            }
+        } else {
             return response()->json([
                 'success' => false,
                 'message' => 'Email atau password tidak valid.',

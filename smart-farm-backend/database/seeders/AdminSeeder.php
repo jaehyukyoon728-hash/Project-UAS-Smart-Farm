@@ -16,7 +16,7 @@ class AdminSeeder extends Seeder
                 'nama' => 'Atminn',
                 'email' => 'admin@gmail.com',
                 'no_phone' => '081234567890',
-                'password' => Hash::make('123abc'),
+                'password' => '123abc',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]

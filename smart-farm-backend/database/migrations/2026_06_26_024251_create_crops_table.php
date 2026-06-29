@@ -19,9 +19,9 @@ return new class extends Migration
                 ->constrained('lands')
                 ->cascadeOnDelete();
 
-            $table->string('nama');
+            $table->enum('nama', ['Gandum', 'Cabai', 'Wortel', 'Kentang', 'Tomat']);
 
-            $table->string('jenis_tanah');
+            $table->enum('jenis_tanah', ['Tanah Liat', 'Tanah Pasir', 'Tanah Merah', 'Tanah Lempung', 'Tanah Hitam', 'Tanah Aluvial', 'Tanah Pesisir']);
 
             $table->timestamps();
         });

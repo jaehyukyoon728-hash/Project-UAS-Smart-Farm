@@ -29,7 +29,7 @@ class SensorController extends Controller
     {
         $validated = $request->validate([
             'crop_id'           => 'required|exists:crops,id',
-            'tahap_pertumbuhan' => 'required|string|max:255',
+            'tahap_pertumbuhan' => 'required|in:Perkecambahan,Tahap Bibit,Umbi,Pembungaan,Penyerbukan,Pembentukan Buah,Pematangan Buah,Pemanenan',
             'moi'               => 'required|numeric|min:0|max:100',
             'tempt'             => 'required|numeric',
             'kelembaban_udara'  => 'required|numeric|min:0|max:100',
@@ -81,7 +81,7 @@ class SensorController extends Controller
 
         $validated = $request->validate([
             'crop_id'           => 'sometimes|exists:crops,id',
-            'tahap_pertumbuhan' => 'sometimes|string|max:255',
+            'tahap_pertumbuhan' => 'sometimes|in:Perkecambahan,Tahap Bibit,Umbi,Pembungaan,Penyerbukan,Pembentukan Buah,Pematangan Buah,Pemanenan',
             'moi'               => 'sometimes|numeric|min:0|max:100',
             'tempt'             => 'sometimes|numeric',
             'kelembaban_udara'  => 'sometimes|numeric|min:0|max:100',

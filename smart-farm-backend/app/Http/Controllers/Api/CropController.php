@@ -35,8 +35,8 @@ class CropController extends Controller
     {
         $validated = $request->validate([
             'land_id'    => 'required|exists:lands,id',
-            'nama'       => 'required|string|max:255',
-            'jenis_tanah' => 'required|string|max:255',
+            'nama'       => 'required|in:Gandum,Cabai,Wortel,Kentang,Tomat',
+            'jenis_tanah' => 'required|in:Tanah Liat,Tanah Pasir,Tanah Merah,Tanah Lempung,Tanah Hitam,Tanah Aluvial,Tanah Pesisir',
         ]);
 
         $crop = Crop::create($validated);
@@ -85,8 +85,8 @@ class CropController extends Controller
 
         $validated = $request->validate([
             'land_id'    => 'sometimes|exists:lands,id',
-            'nama'       => 'sometimes|string|max:255',
-            'jenis_tanah' => 'sometimes|string|max:255',
+            'nama'       => 'sometimes|in:Gandum,Cabai,Wortel,Kentang,Tomat',
+            'jenis_tanah' => 'sometimes|in:Tanah Liat,Tanah Pasir,Tanah Merah,Tanah Lempung,Tanah Hitam,Tanah Aluvial,Tanah Pesisir',
         ]);
 
         $crop->update($validated);

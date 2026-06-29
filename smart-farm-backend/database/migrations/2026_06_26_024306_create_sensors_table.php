@@ -19,7 +19,7 @@ return new class extends Migration
                 ->constrained('crops')
                 ->cascadeOnDelete();
 
-            $table->string('tahap_pertumbuhan');
+            $table->enum('tahap_pertumbuhan', ['Perkecambahan', 'Tahap Bibit', 'Umbi', 'Pembungaan', 'Penyerbukan', 'Pembentukan Buah', 'Pematangan Buah', 'Pemanenan']);
 
             $table->decimal('moi',5,2);
 

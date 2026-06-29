@@ -26,7 +26,7 @@ class SensorSeeder extends Seeder
 
             [
                 'crop_id'=>2,
-                'tahap_pertumbuhan'=>'Pembentukan',
+                'tahap_pertumbuhan'=>'Pembentukan Buah',
                 'moi'=>52,
                 'tempt'=>27,
                 'kelembaban_udara'=>78,

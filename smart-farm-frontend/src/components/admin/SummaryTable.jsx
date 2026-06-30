@@ -22,17 +22,6 @@ export default function SummaryTable() {
 
   const getInitial = (name) => (name || "?").charAt(0).toUpperCase();
 
-  // Tentukan "status irigasi" berdasarkan data prediction terbaru dari lahan
-  const getIrigasiStatus = (user) => {
-    const predictions = user.lands?.flatMap(l => l.crops?.flatMap(c => c.sensors?.flatMap(s => s.prediction ? [s.prediction] : []) || []) || []) || [];
-    if (!predictions.length) return "Tidak Perlu Irigasi";
-    const last = predictions[predictions.length - 1];
-    const kondisi = last.status_kondisi || "";
-    if (kondisi.toLowerCase().includes("irigasi")) return "Perlu Irigasi";
-    if (kondisi.toLowerCase().includes("khusus")) return "Kondisi Khusus";
-    return "Tidak Perlu Irigasi";
-  };
-
   return (
     <div style={cardStyle}>
       {/* Card Header */}
@@ -62,7 +51,7 @@ export default function SummaryTable() {
             {users.length === 0 ? (
               <tr><td colSpan="4" style={{ padding: "32px", textAlign: "center", color: "#9ca3af" }}>Memuat data...</td></tr>
             ) : users.map((user, index) => {
-              const status = getIrigasiStatus(user);
+              const isAktif = (user.status || "").toLowerCase() === "aktif";
               return (
                 <tr key={user.id}
                   style={{ borderBottom: index < users.length - 1 ? "1px solid #f3f4f6" : "none" }}
@@ -80,17 +69,13 @@ export default function SummaryTable() {
                   <td style={{ padding: "18px 24px", fontSize: "14px", color: "#6b7280" }}>{user.email}</td>
                   <td style={{ padding: "18px 24px", fontSize: "14px", color: "#6b7280" }}>{user.lokasi || "-"}</td>
                   <td style={{ padding: "18px 32px 18px 24px" }}>
-                    {status === "Perlu Irigasi" ? (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "5px 12px", fontSize: "12px", fontWeight: "700", color: "#b94a4a", backgroundColor: "#fdf0f0", border: "1px solid #f5c6c6", borderRadius: "99px", whiteSpace: "nowrap" }}>
-                        <FiAlertTriangle size={12} strokeWidth={2.5} /> Perlu Irigasi
-                      </span>
-                    ) : status === "Kondisi Khusus" ? (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "5px 12px", fontSize: "12px", fontWeight: "700", color: "#b45309", backgroundColor: "#fef3c7", border: "1px solid #fde68a", borderRadius: "99px", whiteSpace: "nowrap" }}>
-                        <FiAlertTriangle size={12} strokeWidth={2.5} /> Kondisi Khusus
+                    {isAktif ? (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "5px 12px", fontSize: "12px", fontWeight: "700", color: "#15803d", backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "99px", whiteSpace: "nowrap" }}>
+                        <FiCheck size={12} strokeWidth={2.5} /> Aktif
                       </span>
                     ) : (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "5px 12px", fontSize: "12px", fontWeight: "700", color: "#15803d", backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "99px", whiteSpace: "nowrap" }}>
-                        <FiCheck size={12} strokeWidth={2.5} /> Tidak Perlu Irigasi
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "5px 12px", fontSize: "12px", fontWeight: "700", color: "#b94a4a", backgroundColor: "#fdf0f0", border: "1px solid #f5c6c6", borderRadius: "99px", whiteSpace: "nowrap" }}>
+                        <FiAlertTriangle size={12} strokeWidth={2.5} /> Tidak Aktif
                       </span>
                     )}
                   </td>

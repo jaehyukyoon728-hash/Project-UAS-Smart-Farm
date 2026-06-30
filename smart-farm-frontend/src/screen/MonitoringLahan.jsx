@@ -52,15 +52,46 @@ export default function MonitoringLahan() {
   }, []);
 
   // Normalise field names dari backend ke tampilan
-  const normalised = lands.map((l) => ({
-    id: l.id,
-    name: l.nama_lahan || l.nama || l.name || "-",
-    owner: l.user?.nama || l.owner || "-",
-    location: l.lokasi || l.location || "-",
-    area: l.luas_lahan ? `${l.luas_lahan} ha` : (l.area || "-"),
-    crop: l.crops?.[0]?.nama || l.crop || "-",
-    status: l.status || "Normal",
-  }));
+  const normalised = lands.map((l) => {
+    // Cari semua prediksi untuk lahan ini
+    const predictions = l.crops?.flatMap(c => c.sensors?.flatMap(s => s.prediction ? [s.prediction] : []) || []) || [];
+    
+    let status = "Normal";
+    if (predictions.length > 0) {
+      // Cari prediksi terbaru untuk setiap crop di lahan ini
+      const latestPredictions = [];
+      l.crops?.forEach(crop => {
+        const cropSensors = crop.sensors || [];
+        const cropPreds = predictions.filter(p => cropSensors.some(s => Number(s.id) === Number(p.sensor_id)));
+        if (cropPreds.length > 0) {
+          const latest = cropPreds.reduce((latest, current) => {
+            const currentDate = new Date(current.created_at || current.tanggal_pencatatan || 0);
+            const latestDate = new Date(latest.created_at || latest.tanggal_pencatatan || 0);
+            return currentDate > latestDate ? current : latest;
+          }, cropPreds[0]);
+          latestPredictions.push(latest);
+        }
+      });
+
+      // Tentukan status lahan
+      const hasCritical = latestPredictions.some(p => {
+        const cond = (p.status_kondisi || "").toLowerCase();
+        return cond.includes("irigasi") && !cond.includes("tidak");
+      });
+
+      status = hasCritical ? "Perlu Penyiraman" : "Tidak Perlu Penyiraman";
+    }
+
+    return {
+      id: l.id,
+      name: l.nama_lahan || l.nama || l.name || "-",
+      owner: l.user?.nama || l.owner || "-",
+      location: l.lokasi || l.location || "-",
+      area: l.luas_lahan ? `${l.luas_lahan} ha` : (l.area || "-"),
+      crop: l.crops?.[0]?.nama || l.crop || "-",
+      status: status,
+    };
+  });
 
   const filteredLands = useMemo(() => {
     const query = search.toLowerCase();

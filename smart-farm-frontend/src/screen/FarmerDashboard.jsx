@@ -152,12 +152,12 @@ export default function FarmerDashboard({ user, onLogout }) {
       predictionsApi.getAll(),
     ]).then(([landsRes, predRes]) => {
       const allLands = landsRes.data.data || [];
-      const myLands = allLands.filter(l => l.user_id === user.id);
+      const myLands = allLands.filter(l => Number(l.user_id) === Number(user.id));
       setLands(myLands);
 
-      const myLandIds = myLands.map(l => l.id);
+      const myLandIds = myLands.map(l => Number(l.id));
       const allPredictions = predRes.data.data || [];
-      const myPredictions = allPredictions.filter(p => p.sensor && myLandIds.includes(p.sensor.land_id));
+      const myPredictions = allPredictions.filter(p => p.sensor && p.sensor.crop && myLandIds.includes(Number(p.sensor.crop.land_id)));
       setPredictions(myPredictions);
     }).catch(console.error)
       .finally(() => setLoading(false));
@@ -175,10 +175,12 @@ export default function FarmerDashboard({ user, onLogout }) {
   const latestPredictions = [];
   lands.forEach(land => {
     (land.crops || []).forEach(crop => {
-      const cropPreds = predictions.filter(p => p.sensor?.crop_id === crop.id);
+      const cropPreds = predictions.filter(p => Number(p.sensor?.crop_id) === Number(crop.id));
       if (cropPreds.length > 0) {
         const latest = cropPreds.reduce((latest, current) => {
-          return new Date(current.created_at || current.tanggal_pencatatan) > new Date(latest.created_at || latest.tanggal_pencatatan) ? current : latest;
+          const currentDate = new Date(current.created_at || current.tanggal_pencatatan || 0);
+          const latestDate = new Date(latest.created_at || latest.tanggal_pencatatan || 0);
+          return currentDate > latestDate ? current : latest;
         }, cropPreds[0]);
         latestPredictions.push(latest);
       }
@@ -187,7 +189,7 @@ export default function FarmerDashboard({ user, onLogout }) {
 
   const perluIrigasiCount = latestPredictions.filter(p => {
     const cond = (p.status_kondisi || "").toLowerCase();
-    return cond.includes("perlu irigasi") || cond === "irigasi";
+    return cond.includes("irigasi") && !cond.includes("tidak");
   }).length;
 
   const penangananKhususCount = latestPredictions.filter(p => {
@@ -200,26 +202,31 @@ export default function FarmerDashboard({ user, onLogout }) {
     let latestMoi = "-";
     if (landSensors.length > 0) {
       const latestSensor = landSensors.reduce((latest, current) => {
-        return new Date(current.created_at) > new Date(latest.created_at) ? current : latest;
+        const currentDate = new Date(current.created_at || 0);
+        const latestDate = new Date(latest.created_at || 0);
+        return currentDate > latestDate ? current : latest;
       }, landSensors[0]);
       latestMoi = latestSensor.moi ? `${latestSensor.moi}%` : "-";
     }
 
-    const landPreds = predictions.filter(p => p.sensor && p.sensor.land_id === land.id);
+    const landPreds = predictions.filter(p => p.sensor && p.sensor.crop && Number(p.sensor.crop.land_id) === Number(land.id));
     let statusKondisi = "Kondisi Normal";
     let isAlert = false;
     let className = "text-success";
     if (landPreds.length > 0) {
       const latestPred = landPreds.reduce((latest, current) => {
-        return new Date(current.created_at || current.tanggal_pencatatan) > new Date(latest.created_at || latest.tanggal_pencatatan) ? current : latest;
+        const currentDate = new Date(current.created_at || current.tanggal_pencatatan || 0);
+        const latestDate = new Date(latest.created_at || latest.tanggal_pencatatan || 0);
+        return currentDate > latestDate ? current : latest;
       }, landPreds[0]);
       const status = latestPred.status_kondisi || "";
+      const statusLower = status.toLowerCase();
       statusKondisi = status;
-      if (status.toLowerCase().includes("perlu irigasi") || status.toLowerCase() === "irigasi") {
+      if (statusLower.includes("irigasi") && !statusLower.includes("tidak")) {
         statusKondisi = "Perlu Irigasi Segera";
         isAlert = true;
         className = "text-danger";
-      } else if (status.toLowerCase().includes("khusus") || status.toLowerCase().includes("monitoring")) {
+      } else if (statusLower.includes("khusus") || statusLower.includes("monitoring")) {
         statusKondisi = "Butuh Penanganan Khusus";
         isAlert = true;
         className = "text-warning";
@@ -235,24 +242,33 @@ export default function FarmerDashboard({ user, onLogout }) {
     };
   });
 
-  const predictionHistoryData = predictions.slice(0, 5).map(p => {
-    const cropName = p.sensor?.crop?.nama || "-";
-    const soilType = p.sensor?.crop?.jenis_tanah || "-";
-    const result = p.status_kondisi || "-";
-    
-    let displayResult = "Tidak Irigasi";
-    if (result.toLowerCase().includes("perlu irigasi") || result.toLowerCase() === "irigasi") {
-      displayResult = "Irigasi";
-    } else if (result.toLowerCase().includes("khusus") || result.toLowerCase().includes("monitoring")) {
-      displayResult = "Kondisi Khusus";
-    }
+  const predictionHistoryData = [...predictions]
+    .sort((a, b) => {
+      const dateA = new Date(a.created_at || a.tanggal_pencatatan || 0);
+      const dateB = new Date(b.created_at || b.tanggal_pencatatan || 0);
+      return dateB - dateA;
+    })
+    .slice(0, 5)
+    .map(p => {
+      const cropName = p.sensor?.crop?.nama || "-";
+      const soilType = p.sensor?.crop?.jenis_tanah || "-";
+      const result = p.status_kondisi || "-";
 
-    return {
-      crop: cropName,
-      soil: soilType,
-      result: displayResult,
-    };
-  });
+      const resultLower = result.toLowerCase();
+      let badgeClass = "badge-class0";
+      if (resultLower.includes("irigasi") && !resultLower.includes("tidak")) {
+        badgeClass = "badge-class1";
+      } else if (resultLower.includes("khusus") || resultLower.includes("monitoring")) {
+        badgeClass = "badge-class2";
+      }
+
+      return {
+        crop: cropName,
+        soil: soilType,
+        result: result,
+        badgeClass: badgeClass,
+      };
+    });
 
   return (
     <div className="dashboard-layout">
@@ -296,7 +312,7 @@ export default function FarmerDashboard({ user, onLogout }) {
               👨‍🌾
             </div>
             <div className="profile-info">
-              <span className="profile-name">{user?.name || "Petani"}</span>
+              <span className="profile-name">{user?.nama || "Petani"}</span>
               <span className="profile-role">Akun Petani</span>
             </div>
           </div>
@@ -326,7 +342,11 @@ export default function FarmerDashboard({ user, onLogout }) {
 
             <div className="topbar-actions">
               <div className="date-badge">
-                25 Juni 2026
+                {new Date().toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
               </div>
             </div>
           </div>
@@ -334,7 +354,7 @@ export default function FarmerDashboard({ user, onLogout }) {
           {/* Welcome Section */}
           <div className="welcome-section">
             <h2 className="welcome-title">
-              Selamat Datang Kembali, {user?.name || "Petani"}!
+              Selamat Datang Kembali, {user?.nama || "Petani"}!
             </h2>
             <p className="welcome-subtitle">
               Ringkasan dan tinjauan kondisi irigasi lahan pertanian Anda saat ini.
@@ -434,14 +454,7 @@ export default function FarmerDashboard({ user, onLogout }) {
                           <td>{item.crop}</td>
                           <td>{item.soil}</td>
                           <td>
-                            <span
-                              className={`result-badge ${item.result === "Tidak Irigasi"
-                                ? "badge-class0"
-                                : item.result === "Irigasi"
-                                  ? "badge-class1"
-                                  : "badge-class2"
-                                }`}
-                            >
+                            <span className={`result-badge ${item.badgeClass}`}>
                               {item.result}
                             </span>
                           </td>

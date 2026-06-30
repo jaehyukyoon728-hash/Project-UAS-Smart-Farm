@@ -124,6 +124,16 @@ class PredictionProxyController extends Controller
             'kmeans'             => $result['kmeans'] ?? null,
         ]);
 
+        // ── Simpan data Activity ──────────────────────────────────────
+        \App\Models\Activity::create([
+            'admin_id'      => $validated['admin_id'],
+            'user_id'       => $crop->land->user_id,
+            'land_id'       => $crop->land_id,
+            'prediction_id' => $prediction->id,
+            'activity_type' => 'Prediksi Irigasi',
+            'description'   => "Melakukan prediksi irigasi untuk tanaman {$crop->nama} di {$crop->land->nama}. Hasil: {$rfLabel}.",
+        ]);
+
         // ── Kembalikan hasil ke React ─────────────────────────────────
         return response()->json([
             'success'    => true,

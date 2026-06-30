@@ -44,6 +44,14 @@ class UserController extends Controller
 
         $user = User::create($validated);
 
+        // ── Simpan data Activity ──────────────────────────────────────
+        \App\Models\Activity::create([
+            'admin_id'      => $validated['admin_id'],
+            'user_id'       => $user->id,
+            'activity_type' => 'Registrasi Petani',
+            'description'   => "Mendaftarkan petani baru bernama {$user->nama} ({$user->email}).",
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => 'User berhasil ditambahkan.',

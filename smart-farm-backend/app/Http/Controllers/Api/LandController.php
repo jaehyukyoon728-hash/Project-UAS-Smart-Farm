@@ -13,7 +13,7 @@ class LandController extends Controller
      */
     public function index()
     {
-        $lands = Land::with(['user', 'admin', 'crops.sensors'])->get();
+        $lands = Land::with(['user', 'admin', 'crops.sensors.prediction'])->get();
 
         return response()->json([
             'success' => true,
@@ -36,6 +36,15 @@ class LandController extends Controller
         ]);
 
         $land = Land::create($validated);
+
+        // ── Simpan data Activity ──────────────────────────────────────
+        \App\Models\Activity::create([
+            'admin_id'      => $validated['admin_id'],
+            'user_id'       => $validated['user_id'],
+            'land_id'       => $land->id,
+            'activity_type' => 'Tambah Lahan',
+            'description'   => "Menambahkan lahan baru bernama {$land->nama} di lokasi {$land->lokasi}.",
+        ]);
 
         return response()->json([
             'success' => true,

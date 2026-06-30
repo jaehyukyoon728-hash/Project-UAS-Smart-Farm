@@ -22,15 +22,33 @@ export default function AdminDashboard({ user, onLogout }) {
       sensorsApi.getAll(),
     ]).then(([usersRes, landsRes, sensorsRes]) => {
       const sensors = sensorsRes.data.data || [];
-      const critical = sensors.filter(s => {
-        const cond = s.prediction?.status_kondisi || "";
-        return cond.toLowerCase().includes("irigasi");
-      }).length;
+      
+      // Group sensors by crop_id to find the latest sensor for each crop
+      const latestSensorPerCrop = {};
+      sensors.forEach(s => {
+        const cropId = s.crop_id;
+        const currentMilli = new Date(s.created_at || 0).getTime();
+        const latestMilli = latestSensorPerCrop[cropId] ? new Date(latestSensorPerCrop[cropId].created_at || 0).getTime() : 0;
+        if (!latestSensorPerCrop[cropId] || currentMilli > latestMilli) {
+          latestSensorPerCrop[cropId] = s;
+        }
+      });
+
+      // Determine which lands are critical based on the latest prediction of their crops
+      const criticalLandIds = new Set();
+      Object.values(latestSensorPerCrop).forEach(s => {
+        const cond = (s.prediction?.status_kondisi || "").toLowerCase();
+        const needsIrrigation = cond.includes("irigasi") && !cond.includes("tidak");
+        if (needsIrrigation && s.crop && s.crop.land_id) {
+          criticalLandIds.add(s.crop.land_id);
+        }
+      });
+
       setStats({
         users: (usersRes.data.data || []).length,
         lands: (landsRes.data.data || []).length,
         sensors: sensors.length,
-        critical,
+        critical: criticalLandIds.size,
       });
     }).catch(console.error);
   }, [activeView]);

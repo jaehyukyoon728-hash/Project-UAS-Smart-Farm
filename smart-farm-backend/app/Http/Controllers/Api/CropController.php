@@ -41,6 +41,16 @@ class CropController extends Controller
 
         $crop = Crop::create($validated);
 
+        // ── Simpan data Activity ──────────────────────────────────────
+        $land = $crop->land;
+        \App\Models\Activity::create([
+            'admin_id'      => $land ? $land->admin_id : null,
+            'user_id'       => $land ? $land->user_id : null,
+            'land_id'       => $validated['land_id'],
+            'activity_type' => 'Tambah Tanaman',
+            'description'   => "Menambahkan tanaman {$crop->nama} dengan jenis tanah {$crop->jenis_tanah} pada lahan " . ($land ? $land->nama : '-') . ".",
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => 'Tanaman berhasil ditambahkan.',

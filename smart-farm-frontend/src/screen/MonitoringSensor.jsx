@@ -93,17 +93,29 @@ export default function MonitoringSensor() {
       .finally(() => setLoading(false));
   }, []);
 
+  const getNormalizedStatus = (statusKondisi) => {
+    if (!statusKondisi) return "Normal";
+    const s = statusKondisi.toLowerCase();
+    if (s.includes("irigasi") && !s.includes("tidak")) {
+      return "Perlu Penyiraman";
+    }
+    if (s.includes("khusus") || s.includes("monitoring")) {
+      return "Tidak Perlu Penyiraman";
+    }
+    return "Normal";
+  };
+
   // Normalise field names dari backend ke tampilan
   const normSensors = sensors.map((s) => ({
     id: s.id,
     landName: s.crop?.land?.nama_lahan || s.crop?.land?.nama || "-",
     owner: s.crop?.land?.user?.nama || "-",
     crop: s.crop?.nama || "-",
-    humidity: s.moi ?? 0,
-    temperature: s.tempt ?? 0,
-    rainfall: s.kelembaban_udara ?? 0,
+    humidity: Number(s.moi ?? 0),
+    temperature: Number(s.tempt ?? 0),
+    rainfall: Number(s.kelembaban_udara ?? 0),
     date: (s.created_at || "").split("T")[0],
-    recommendation: s.prediction?.status_kondisi || "Normal",
+    recommendation: getNormalizedStatus(s.prediction?.status_kondisi),
   }));
 
   const filteredSensors = useMemo(() => {
@@ -121,10 +133,32 @@ export default function MonitoringSensor() {
   const avgTemp = normSensors.length
     ? (normSensors.reduce((s, r) => s + r.temperature, 0) / normSensors.length).toFixed(1)
     : 0;
-  const totalRainfall = normSensors.reduce((s, r) => s + r.rainfall, 0);
-  const criticalCount = normSensors.filter(
-    (r) => r.recommendation === "Perlu Penyiraman"
-  ).length;
+  const avgAirHumidity = normSensors.length
+    ? Math.round(normSensors.reduce((s, r) => s + r.rainfall, 0) / normSensors.length)
+    : 0;
+
+  // Group sensors by crop_id to find the latest sensor for each crop
+  const latestSensorPerCrop = {};
+  sensors.forEach(s => {
+    const cropId = s.crop_id;
+    const currentMilli = new Date(s.created_at || 0).getTime();
+    const latestMilli = latestSensorPerCrop[cropId] ? new Date(latestSensorPerCrop[cropId].created_at || 0).getTime() : 0;
+    if (!latestSensorPerCrop[cropId] || currentMilli > latestMilli) {
+      latestSensorPerCrop[cropId] = s;
+    }
+  });
+
+  // Determine which lands are critical based on the latest prediction of their crops
+  const criticalLandIds = new Set();
+  Object.values(latestSensorPerCrop).forEach(s => {
+    const cond = (s.prediction?.status_kondisi || "").toLowerCase();
+    const needsIrrigation = cond.includes("irigasi") && !cond.includes("tidak");
+    if (needsIrrigation && s.crop && s.crop.land_id) {
+      criticalLandIds.add(s.crop.land_id);
+    }
+  });
+
+  const criticalCount = criticalLandIds.size;
 
   const summaryCards = [
     {
@@ -149,7 +183,7 @@ export default function MonitoringSensor() {
     },
     {
       label: "Kelembapan Udara",
-      value: `${totalRainfall} mm`,
+      value: `${avgAirHumidity}%`,
       icon: FiCloud,
       bg: "#f0fdf4",
       textColor: "#15803d",
